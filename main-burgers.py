@@ -7,7 +7,7 @@ import Mesh as m
 import time_int as tint
 import linedg
 import Limit
-from scipy import sparse
+# from scipyimport sparse
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 np.set_printoptions(linewidth=250)
@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
 
     
-    probs = pr.problem(3)
+    probs = pr.problem(1)
     params, mesh, u = probs.SetProblem()
 
     print("=================================================================")

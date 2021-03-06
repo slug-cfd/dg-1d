@@ -64,7 +64,7 @@ def DoubleShock(params,x):
     # #         uinit[i,j] = ul
     # return uinit
 
-class problem:
+class BurgersProblem:
     def __init__ (self, problem):
         self.__problem = problem
 
@@ -172,3 +172,11 @@ class problem:
             u = 1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*( (mesh.X() - mu)/(sigma) )**2 )
 
         return params, mesh, u
+
+
+class EulerProblem:
+    def __init__ (self, problem):
+        self.__problem = problem
+
+    def GetProblem(self):
+        return self.__problem

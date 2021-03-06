@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
 
     
-    probs = pr.problem(1)
+    probs = pr.BurgersProblem(1)
     params, mesh, u = probs.SetProblem()
 
     print("=================================================================")

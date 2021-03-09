@@ -16,9 +16,11 @@ np.set_printoptions(linewidth=250)
 
 def PlotSolution(t, x, u, fig):
     xplot = x.ravel()
-    uplot = u.ravel()
     fig.clf()
-    plt.plot(xplot,uplot,'b-')
+    colors = [ 'b-', 'r-', 'g-']
+    for i in range(u.shape[2]):
+        uplot = u[:,:,i].ravel()
+        plt.plot(xplot,uplot,colors[i])
     plt.xlabel("x")
     plt.ylabel("u")
     plt.title("Time = %1.3f" %t)
@@ -33,7 +35,8 @@ if __name__ == "__main__":
     
     probs = pr.EulerProblem(1)
     params, mesh, u = probs.SetProblem()
-
+    fig = plt.figure()
+    PlotSolution(0.0,mesh.X(), u, fig)
     # print("=================================================================")
     # print("*                    Simulation                                 *")
     # print("*                     DG Code                                   *")

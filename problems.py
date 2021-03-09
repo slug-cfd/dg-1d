@@ -170,9 +170,24 @@ class BurgersProblem:
 # EULER PROBLEMS
 ####################################################################################
 
-def Sod(params, mesh.X()):
-    U = np.zeros(params.nels, params.nnodes, params.neqs)
-    U.shape
+def Sod(params, x):
+
+    ip = Interpolation.Interpolation(params.nnodes(), params.nquads())
+    # prim array rho, pressure, u
+    Uinit = np.zeros([params.nels(), params.nnodes(), params.neqs()])
+
+    for i in range(params.nels()):
+        #compute center of cell
+        xc = np.sum( np.matmul(ip.W(),np.matmul(ip.B(),x[i,:])))
+        if (xc < params.ShockLoc()):
+            Uinit[i,:,:] = params.LeftBC()
+        elif (xc >= params.ShockLoc()):
+            Uinit[i,:,:] = params.RightBC()
+
+    print(Uinit)
+    return Uinit
+
+    
 
 
 class EulerProblem:
@@ -201,5 +216,7 @@ class EulerProblem:
             plotSol=True
 
             params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "godunov", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            print(params)
             mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
             u = Sod(params, mesh.X())
+        return params, mesh, u

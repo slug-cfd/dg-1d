@@ -210,8 +210,8 @@ class EulerProblem:
             gamma = 1.4
 
             # prim array rho, pressure, u
-            rightBC = np.array([1.0, 1.0, 0.0])
-            leftBC  = np.array([0.125, 0.1, 0.0])
+            leftBC = np.array([1.0, 1.0, 0.0])
+            rightBC  = np.array([0.125, 0.1, 0.0])
 
             plotSol=True
 

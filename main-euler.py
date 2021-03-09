@@ -17,16 +17,29 @@ np.set_printoptions(linewidth=250)
 def PlotSolution(t, x, u, fig):
     xplot = x.ravel()
     fig.clf()
-    colors = [ 'b-', 'r-', 'g-']
-    for i in range(u.shape[2]):
-        uplot = u[:,:,i].ravel()
-        plt.plot(xplot,uplot,colors[i])
+    colors = ['b-', 'r-', 'g-']
+    if len(u.shape) == 3:
+        n = u.shape[2]
+        for i in range(n):
+            uplot = u[:,:,i].ravel()
+            plt.plot(xplot,uplot,colors[i])
+    else:
+        uplot = u.ravel()
+        plt.plot(xplot,uplot,colors[0])
+
+    
     plt.xlabel("x")
     plt.ylabel("u")
     plt.title("Time = %1.3f" %t)
     plt.grid()
     plt.pause(0.05)
     plt.draw()
+
+def Cons2Prim(consU):
+    return primU
+
+def Prim2Cons(primU):
+    return consU
 
 if __name__ == "__main__":
 
@@ -36,7 +49,7 @@ if __name__ == "__main__":
     probs = pr.EulerProblem(1)
     params, mesh, u = probs.SetProblem()
     fig = plt.figure()
-    PlotSolution(0.0,mesh.X(), u, fig)
+    PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
     # print("=================================================================")
     # print("*                    Simulation                                 *")
     # print("*                     DG Code                                   *")

@@ -56,14 +56,6 @@ def DoubleShock(params,x):
             uinit[i,:] = -1
     return uinit 
 
-
-    # # for j in range(Par.p+1):
-    # #     if (x[i,j] > shockLoc):
-    # #         uinit[i,j] = ur
-    # #     else:
-    # #         uinit[i,j] = ul
-    # return uinit
-
 class BurgersProblem:
     def __init__ (self, problem):
         self.__problem = problem
@@ -174,9 +166,40 @@ class BurgersProblem:
         return params, mesh, u
 
 
+####################################################################################
+# EULER PROBLEMS
+####################################################################################
+
+def Sod(params, mesh.X()):
+    U = np.zeros(params.nels, params.nnodes, params.neqs)
+    U.shape
+
+
 class EulerProblem:
     def __init__ (self, problem):
         self.__problem = problem
 
     def GetProblem(self):
         return self.__problem
+
+    def SetProblem(self):
+        if (self.__problem == 1):
+            neqs = 3
+            order = 4
+            nquads = 2*order
+            nels = 100
+            domain = np.array([0,1])
+            maxtime = 0.3
+            cfl = 0.2
+            shockLoc = 0.5
+            gamma = 1.4
+
+            # prim array rho, pressure, u
+            rightBC = np.array([1.0, 1.0, 0.0])
+            leftBC  = np.array([0.125, 0.1, 0.0])
+
+            plotSol=True
+
+            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "godunov", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
+            u = Sod(params, mesh.X())

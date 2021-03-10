@@ -23,7 +23,18 @@ class linedg:
 
     def Flux(self,u):
         # Compute flux
-        F = np.multiply(u,u)
+        if self.params.Equation() == "burgers":
+            F = np.multiply(u,u)
+        elif self.params.Equation() == "euler":
+            rhou_sqrd = np.multiply(u[:,:,1],u[:,:,1])  
+            pres = (self.params.Gamma()-1)*( u[:,:,2] - 0.5*np.divide( rhou_sqrd, u[:,:,0] ))
+            F = np.zeros(u.shape)
+            F[:,:,0] = u[:,:,1]
+            F[:,:,1] = np.divide(rhou_sqrd, u[:,:,0]) + pres
+            F[:,:,2] = np.multiply(u[:,:,2] + pres, u[:,:,1])
+            F[:,:,2] = np.divide(F[:,:,2], u[:,:,0])
+
+
         # F = u
         return F*self.mesh.J()*self.mesh.invJ()
 

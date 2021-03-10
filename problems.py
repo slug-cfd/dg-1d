@@ -208,14 +208,14 @@ class EulerProblem:
             cfl = 0.2
             shockLoc = 0.5
             gamma = 1.4
-
+            equation = "euler"
             # prim array rho, pressure, u
             leftBC = np.array([1.0, 1.0, 0.0])
             rightBC  = np.array([0.125, 0.1, 0.0])
 
             plotSol=True
 
-            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "godunov", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "godunov", True, "pi1", leftBC, rightBC, shockLoc, plotSol,gamma,equation)
             print(params)
             mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
             u = Sod(params, mesh.X())

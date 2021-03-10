@@ -35,10 +35,15 @@ def PlotSolution(t, x, u, fig):
     plt.pause(0.05)
     plt.draw()
 
-def Cons2Prim(consU):
-    return primU
+# def Cons2Prim(consU):
+#     return primU
 
-def Prim2Cons(primU):
+def Prim2Cons(gamma,primU):
+    consU = np.zeros(primU.shape)
+    consU[:,:,0] = primU[:,:,0]
+    consU[:,:,1] = np.multiply(primU[:,:,0],primU[:,:,2])
+    consU[:,:,2] = primU[:,:,1]/(gamma-1) + 0.5*np.multiply(primU[:,:,0], np.multiply(primU[:,:,2],primU[:,:,2]))
+
     return consU
 
 if __name__ == "__main__":
@@ -47,42 +52,44 @@ if __name__ == "__main__":
 
     
     probs = pr.EulerProblem(1)
-    params, mesh, u = probs.SetProblem()
+    params, mesh, U = probs.SetProblem()
+    u = Prim2Cons(params.Gamma(),U)
+    print(u)
     fig = plt.figure()
-    PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
-    # print("=================================================================")
-    # print("*                    Simulation                                 *")
-    # print("*                     DG Code                                   *")
-    # print("*             Order = ", params.order() )
-    # print("*         Number of Elements = ", params.nels())
-    # print("*            CFL Constant = ", params.CourantNumber())
-    # print("*              Problem  = ", probs.GetProblem())
-    # print("=================================================================")
+    # PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
+    print("=================================================================")
+    print("*                    Simulation                                 *")
+    print("*                     DG Code                                   *")
+    print("*             Order = ", params.order() )
+    print("*         Number of Elements = ", params.nels())
+    print("*            CFL Constant = ", params.CourantNumber())
+    print("*              Problem  = ", probs.GetProblem())
+    print("=================================================================")
 
-    # # params.UpdatePlotSol(False)
-    # utest = np.ones([params.nels(), params.nnodes()])
+    # params.UpdatePlotSol(False)
+    utest = np.ones([params.nels(), params.nnodes()])
 
 
 
-    # ldg = linedg.linedg(mesh, params)
-    # ti = tint.time_integration(ldg)
-    # # lim = Limit.Limit(ldg)
-    # # ubar = lim.LimitSolution(u)
+    ldg = linedg.linedg(mesh, params)
+    ti = tint.time_integration(ldg)
+    lim = Limit.Limit(ldg)
+    # ubar = lim.LimitSolution(u)
 
-    # t = 0.0
-    # nsteps = 0
-    # fig = plt.figure()
-    # while t < params.MaxTime():
-    #     dt = ti.ComputeDt(u)
-    #     if (dt > params.MaxTime()-t):
-    #         dt = params.MaxTime()-t
-    #     t += dt
-    #     u = ti.Evolve(dt,t,u)
-    #     nsteps += 1
-    #     if (nsteps % 100 == 0 and params.PlotSol()==True): 
-    #         print("time = %1.4f" %t, "dt = %1.3e"%dt)
-    #         PlotSolution(t, mesh.X(), u, fig)
+    t = 0.0
+    nsteps = 0
+    fig = plt.figure()
+    while t < params.MaxTime():
+        dt = ti.ComputeDt(u)
+        if (dt > params.MaxTime()-t):
+            dt = params.MaxTime()-t
+        t += dt
+        u = ti.Evolve(dt,t,u)
+        nsteps += 1
+        if (nsteps % 100 == 0 and params.PlotSol()==True): 
+            print("time = %1.4f" %t, "dt = %1.3e"%dt)
+            PlotSolution(t, mesh.X(), u, fig)
 
-    # if (params.PlotSol() == True):  
-    #     PlotSolution(t, mesh.X(), u, fig)
-    #     plt.show()
+    if (params.PlotSol() == True):  
+        PlotSolution(t, mesh.X(), u, fig)
+        plt.show()

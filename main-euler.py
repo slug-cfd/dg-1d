@@ -5,6 +5,7 @@ import SimulationParameters as sp
 import problems as pr
 import Mesh as m
 import time_int as tint
+import euler as euler
 import linedg
 import Limit
 # from scipyimport sparse
@@ -35,16 +36,6 @@ def PlotSolution(t, x, u, fig):
     plt.pause(0.05)
     plt.draw()
 
-# def Cons2Prim(consU):
-#     return primU
-
-def Prim2Cons(gamma,primU):
-    consU = np.zeros(primU.shape)
-    consU[:,:,0] = primU[:,:,0]
-    consU[:,:,1] = np.multiply(primU[:,:,0],primU[:,:,2])
-    consU[:,:,2] = primU[:,:,1]/(gamma-1) + 0.5*np.multiply(primU[:,:,0], np.multiply(primU[:,:,2],primU[:,:,2]))
-
-    return consU
 
 if __name__ == "__main__":
 
@@ -53,8 +44,9 @@ if __name__ == "__main__":
     
     probs = pr.EulerProblem(1)
     params, mesh, U = probs.SetProblem()
-    u = Prim2Cons(params.Gamma(),U)
-    print(u)
+    equations = euler.Euler(1.4)
+    u = equations.Prim2Cons(U)
+    # print(u)
     fig = plt.figure()
     # PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
     print("=================================================================")
@@ -71,7 +63,7 @@ if __name__ == "__main__":
 
 
 
-    ldg = linedg.linedg(mesh, params)
+    ldg = linedg.linedg(mesh, params, equations)
     ti = tint.time_integration(ldg)
     lim = Limit.Limit(ldg)
     # ubar = lim.LimitSolution(u)

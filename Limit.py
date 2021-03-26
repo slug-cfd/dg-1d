@@ -9,6 +9,7 @@ class Limit:
         self.__nnodes = self.__params.nnodes()
         self.__nquads = self.__params.nquads()
         self.__nels   = self.__params.nels()
+        self.__neqs   = self.__params.neqs()
         self.__dx     = linedg.mesh.dx()
         self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
 
@@ -41,15 +42,15 @@ class Limit:
 
     def LimitSolution(self,u):
         self.ulimit = u
-        self.u = np.zeros([self.__nels+2, self.__nnodes])
-        self.u[1:self.__nels+1,:] = u
+        self.u = np.zeros([self.__nels+2, self.__nnodes, self.__neqs])
+        self.u[1:self.__nels+1,:,:] = u
 
         if (self.__params.BoundaryConditions() == "periodic"):
-            self.u[0,:] = u[-1,:]
-            self.u[-1,:] = u[0,:]
+            self.u[0,:,:] = u[-1,:,:]
+            self.u[-1,:,:] = u[0,:,:]
         else:
-            self.u[0,:] = np.ones([self.__nnodes])*self.__params.LeftBC()
-            self.u[-1,:] = np.ones([self.__nnodes])*self.__params.RightBC()
+            self.u[0,:,:] = np.ones([self.__nnodes,self.__neqs])*self.__params.LeftBC()
+            self.u[-1,:,:] = np.ones([self.__nnodes,self.__neqs])*self.__params.RightBC()
         
         ids = self.FindElementsToLimit()
         ids[0] = 1

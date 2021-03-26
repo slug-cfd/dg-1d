@@ -2,7 +2,7 @@ import numpy as np
 import Interpolation as interpolation
 
 class linedg:
-    def __init__(self, mesh, params):
+    def __init__(self, mesh, params, equations):
         self.params = params
         self.__dim   = 1
         self.__neqs  = params.neqs()
@@ -14,7 +14,11 @@ class linedg:
         self.mesh  = mesh
         self.mass = np.matmul(np.transpose(self.ip.B()), np.matmul(self.ip.W(), self.ip.B()) )
         self.invMass = np.linalg.inv(self.mass)
-        self.__q = np.zeros([self.__nels,self.__nnodes])
+        self.__q = np.zeros([self.__nels,self.__nnodes,self.__neqs])
+        self.equations = equations
+        self.__leftBC = np.zeros([self.__neqs])
+        self.__rightBC = np.zeros([self.__neqs])
+
     def order(self):
         return self.__order
 
@@ -22,26 +26,13 @@ class linedg:
         return self.__q
 
     def Flux(self,u):
-        # Compute flux
-        if self.params.Equation() == "burgers":
-            F = np.multiply(u,u)
-        elif self.params.Equation() == "euler":
-            rhou_sqrd = np.multiply(u[:,:,1],u[:,:,1])  
-            pres = (self.params.Gamma()-1)*( u[:,:,2] - 0.5*np.divide( rhou_sqrd, u[:,:,0] ))
-            F = np.zeros(u.shape)
-            F[:,:,0] = u[:,:,1]
-            F[:,:,1] = np.divide(rhou_sqrd, u[:,:,0]) + pres
-            F[:,:,2] = np.multiply(u[:,:,2] + pres, u[:,:,1])
-            F[:,:,2] = np.divide(F[:,:,2], u[:,:,0])
-
-
-        # F = u
+        F = self.equations.Flux(u)
         return F*self.mesh.J()*self.mesh.invJ()
 
     def SetBC(self):
         if (self.params.BoundaryConditions() == "periodic"):
-            self.__leftBC = self.u[self.__nels-1, self.__nnodes-1]
-            self.__rightBC = self.u[0,0]
+            self.__leftBC = self.u[self.__nels-1, self.__nnodes-1,:]
+            self.__rightBC = self.u[0,0,:]
         elif (self.params.BoundaryConditions() == "outflow"):
             self.__leftBC = self.params.LeftBC()
             self.__rightBC = self.params.RightBC()
@@ -51,28 +42,33 @@ class linedg:
     def AssembleElement(self,u):
         self.u = u
         self.SetBC()
-        q = np.zeros([self.__nnodes,1])
-        fstar = np.zeros([2,1])
+        q = np.zeros([self.__nnodes,self.__neqs])
+        U = np.zeros([self.__nels, self.__nquads, self.__neqs])
+        fstar = np.zeros([2,self.__neqs])
         for iel in range(self.__nels):
-            # u at quadrature points
-            U = np.matmul( self.ip.B(), self.u[iel,:])
-            # Compute reference flux
+            # Compute u at quadrature points
+            for ieq in range(self.__neqs):
+                U[iel,:,ieq] = np.matmul(self.ip.B(),self.u[iel,:,ieq])
+
+            # Compute flux at quadrature points 
             F = self.Flux(U)
-            #Compute volume term
-            q = -np.matmul( np.transpose(self.ip.D()), np.matmul(self.ip.W(), F) )
-            if (iel == 0):
-                fstar[0] = self.RiemannSolver(self.__leftBC,self.u[iel,0])
-                fstar[-1] = self.RiemannSolver(self.u[iel,-1], self.u[iel+1,0])
-            elif (iel == self.__nels-1):
-                fstar[0] = self.RiemannSolver(self.u[iel-1,-1], self.u[iel,0])
-                fstar[-1] =self.RiemannSolver(self.u[iel,-1], self.__rightBC)
-            else:
-                fstar[0] = self.RiemannSolver(self.u[iel-1,-1], self.u[iel,0])
-                fstar[-1] = self.RiemannSolver(self.u[iel,-1], self.u[iel+1,0])
-            
-            q[0] -= fstar[0]
-            q[-1] += fstar[1]
-            self.__q[iel,:] = np.matmul(self.invMass, q)
+            for ieq in range(self.__neqs):
+                #Compute volume term
+                q[:,ieq] = -np.matmul( np.transpose(self.ip.D()), np.matmul(self.ip.W(), F[iel,:,ieq]) )
+                # Compute numerical flux
+                if (iel == 0):
+                    fstar[0,ieq] = self.RiemannSolver(self.__leftBC[ieq],self.u[iel,0,ieq])
+                    fstar[-1,ieq] = self.RiemannSolver(self.u[iel,-1,ieq], self.u[iel+1,0,ieq])
+                elif (iel == self.__nels-1):
+                    fstar[0,ieq] = self.RiemannSolver(self.u[iel-1,-1,ieq], self.u[iel,0,ieq])
+                    fstar[-1,ieq] =self.RiemannSolver(self.u[iel,-1,ieq], self.__rightBC[ieq])
+                else:
+                    fstar[0,ieq] = self.RiemannSolver(self.u[iel-1,-1,ieq], self.u[iel,0,ieq])
+                    fstar[-1,ieq] = self.RiemannSolver(self.u[iel,-1,ieq], self.u[iel+1,0,ieq])
+                
+                q[0,ieq] -= fstar[0,ieq]
+                q[-1,ieq] += fstar[1,ieq]
+                self.__q[iel,:,ieq] = np.matmul(self.invMass, q[:,ieq])
         return -self.__q/self.mesh.detJ()
 
     ######################################################
@@ -120,7 +116,7 @@ class linedg:
         return Fstar
     
     def LF(self, uleft, uright):
-        Cmax = np.amax(self.u)
+        Cmax = np.amax(self.equations.Dflux(self.u))
         FL = self.Flux(uleft)
         FR = self.Flux(uright)
         avgState = 0.5*(FL + FR)
@@ -129,7 +125,7 @@ class linedg:
         return Fstar
 
     def LLF(self, uleft, uright):
-        Cmax = np.amax([uleft,uright])
+        Cmax = np.amax([self.equations.Dflux(uleft),self.equations.Dflux(uright)])
         FL = self.Flux(uleft)
         FR = self.Flux(uright)
         avgState = 0.5*(FL + FR)

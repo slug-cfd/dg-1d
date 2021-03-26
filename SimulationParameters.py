@@ -1,7 +1,7 @@
 import numpy as np
 
 class Parameters:
-    def __init__(self, neqs=1, order=2, quads=3*2+1, numOfEls=30, domain=np.array([0,1]), courantNumber=0.8, maxTime=0.25, timeIntegration="rk4" ,boundaryCondition="periodic", riemannSolver="godunov", limitBool=False, limiter="pi1",leftBC=0, rightBC=0, shockLoc=0, plotSol=True, gamma=1.4, equation="burgers"):
+    def __init__(self, neqs=1, order=2, quads=3*2+1, numOfEls=30, domain=np.array([0,1]), courantNumber=0.8, maxTime=0.25, timeIntegration="rk4" ,boundaryCondition="periodic", riemannSolver="godunov", limitBool=False, limiter="pi1",leftBC=np.zeros([1]), rightBC=np.zeros([1]), shockLoc=0, plotSol=True):
         self.__order = order
         self.__neqs  = neqs
         self.__p     = order+1
@@ -16,11 +16,9 @@ class Parameters:
         self.__limiter = limiter
         self.__riemannSolver = riemannSolver
         self.__shockLoc = shockLoc
-        self.__leftBC = leftBC
-        self.__rightBC = rightBC
+        self.__leftBC = leftBC 
+        self.__rightBC = rightBC 
         self.__plotSol = plotSol
-        self.__gamma = gamma
-        self.__equation = equation
         
     def neqs(self):
         return self.__neqs
@@ -58,7 +56,3 @@ class Parameters:
         return self.__plotSol
     def UpdatePlotSol(self, plotCond):
         self.__plotSol = plotCond
-    def Gamma(self):
-        return self.__gamma
-    def Equation(self):
-        return self.__equation

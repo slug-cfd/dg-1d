@@ -12,6 +12,17 @@ from mpl_toolkits.mplot3d import Axes3D
 import sys
 np.set_printoptions(linewidth=250)
 
+class Burgers:
+        
+    def Flux(self,u):
+        # F = np.zeros(u.shape)
+        F = 0.5*np.multiply(u,u)
+        return F
+
+    # Derivative of flux with respect to u
+    # Used for computing 
+    def Dflux(self,u):
+        return u
 
 
 def PlotSolution(t, x, u, fig):
@@ -32,8 +43,9 @@ if __name__ == "__main__":
 
 
     
-    probs = pr.BurgersProblem(1)
+    probs = pr.BurgersProblem(6)
     params, mesh, u = probs.SetProblem()
+    equations = Burgers()
 
     print("=================================================================")
     print("*                    Simulation                                 *")
@@ -49,7 +61,7 @@ if __name__ == "__main__":
 
 
 
-    ldg = linedg.linedg(mesh, params)
+    ldg = linedg.linedg(mesh, params, equations)
     ti = tint.time_integration(ldg)
     # lim = Limit.Limit(ldg)
     # ubar = lim.LimitSolution(u)
@@ -64,7 +76,7 @@ if __name__ == "__main__":
         t += dt
         u = ti.Evolve(dt,t,u)
         nsteps += 1
-        if (nsteps % 100 == 0 and params.PlotSol()==True): 
+        if (nsteps % 5 == 0 and params.PlotSol()==True): 
             print("time = %1.4f" %t, "dt = %1.3e"%dt)
             PlotSolution(t, mesh.X(), u, fig)
 

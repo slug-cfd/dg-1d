@@ -15,6 +15,11 @@ class time_integration:
             unew = self.RK4(dt,t,uold)
         return unew
     def RK4(self,dt,t,uold):
+        k1 = np.zeros(uold.shape)
+        k2 = np.zeros(uold.shape)
+        k3 = np.zeros(uold.shape)
+        k4 = np.zeros(uold.shape)
+        
         k1 = dt*self.__linedg.AssembleElement(uold)
         k2 = dt*self.__linedg.AssembleElement(uold + 0.5*k1)
         k3 = dt*self.__linedg.AssembleElement(uold + 0.5*k2)

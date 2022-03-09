@@ -186,7 +186,6 @@ def Sod(params, x):
         elif (xc >= params.ShockLoc()):
             Uinit[i,:,:] = params.RightBC()
 
-    print(Uinit)
     return Uinit
 
     
@@ -217,7 +216,7 @@ class EulerProblem:
 
             plotSol=True
 
-            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "godunov", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "llf", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
             print(params)
             mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
             u = Sod(params, mesh.X())

@@ -20,11 +20,11 @@ class Parameters:
         self.__rightBC = rightBC 
         self.__plotSol = plotSol
         
-    def neqs(self):
+    def neqs(self)-> int:
         return self.__neqs
     def order(self):
         return self.__order
-    def nnodes(self):
+    def nnodes(self)-> int:
         return self.__p
     def nquads(self):
         return self.__quads

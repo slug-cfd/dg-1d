@@ -45,8 +45,11 @@ if __name__ == "__main__":
     probs = pr.EulerProblem(1)
     params, mesh, U = probs.SetProblem()
     equations = euler.Euler(1.4)
-    u = equations.Prim2Cons(U)
-    # print(u)
+    u = np.zeros(U.shape)
+    for iel in range(params.nels()):
+        for i in range(params.nnodes()):
+            u[iel,i,:] = equations.Prim2Cons(U[iel,i,:])
+    print(u)
     fig = plt.figure()
     # PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
     print("=================================================================")
@@ -73,6 +76,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     while t < params.MaxTime():
         dt = ti.ComputeDt(u)
+        print("step =", nsteps, "time = %1.4f" %t, "dt = %1.3e"%dt)
         if (dt > params.MaxTime()-t):
             dt = params.MaxTime()-t
         t += dt

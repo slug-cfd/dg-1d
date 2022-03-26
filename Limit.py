@@ -14,6 +14,7 @@ class Limit:
         self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
 
     def minmod(self,ubar):
+        # print(ubar)
         s = np.sum(np.sign(ubar))/ubar.size
         if (np.abs(s) == 1):
             m = s*np.amin(np.abs(ubar))
@@ -40,17 +41,18 @@ class Limit:
                 ids[j] = 1
         return ids
 
-    def LimitSolution(self,u):
+    def LimitSolution(self, u: np.array, ieq: int):
         self.ulimit = u
-        self.u = np.zeros([self.__nels+2, self.__nnodes, self.__neqs])
-        self.u[1:self.__nels+1,:,:] = u
+        self.u = np.zeros([self.__nels+2, self.__nnodes])
+        # print(u.shape)
+        self.u[1:self.__nels+1,:] = u
 
         if (self.__params.BoundaryConditions() == "periodic"):
-            self.u[0,:,:] = u[-1,:,:]
-            self.u[-1,:,:] = u[0,:,:]
+            self.u[0,:] = u[-1,:]
+            self.u[-1,:] = u[0,:]
         else:
-            self.u[0,:,:] = np.ones([self.__nnodes,self.__neqs])*self.__params.LeftBC()
-            self.u[-1,:,:] = np.ones([self.__nnodes,self.__neqs])*self.__params.RightBC()
+            self.u[0,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.LeftBC())[ieq]
+            self.u[-1,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.RightBC())[ieq]
         
         ids = self.FindElementsToLimit()
         ids[0] = 1

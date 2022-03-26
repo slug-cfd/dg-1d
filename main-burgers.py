@@ -23,6 +23,12 @@ class Burgers:
     # Used for computing 
     def Dflux(self,u):
         return u
+    
+    def Prim2Cons(self, u: np.array) -> np.array:
+        return u
+    
+    def Cons2Prim(self, u: np.array) -> np.array:
+        return u
 
 
 def PlotSolution(t, x, u, fig):

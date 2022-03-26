@@ -14,9 +14,14 @@ class Euler:
         # P = (self.Gamma()-1)*( u[2] - 0.5*np.divide( rhou_sqrd, u[0] ))
         return P
 
-    # TODO (mrodrig6): implement transformation from conservative to primitive variables
+    # TODO (mjrodriguez): implement transformation from conservative to primitive variables
+    # TODO(mjrodriguez): Definitely a bug here...
     def Cons2Prim(self, consU):
-        return 0
+        primU = np.zeros(consU.shape)
+        primU[0] = consU[0] # Density
+        primU[1] = consU[1]/consU[0] # vx = rho*u / rho
+        primU[2] = self.Pressure(consU)
+        return primU
 
     def Prim2Cons(self, primU):
         consU = np.zeros(primU.shape)
@@ -41,10 +46,10 @@ class Euler:
         # print(u)
         den = u[0]
         pres = self.Pressure(u)
-        print(self.Gamma(), pres, den, self.Gamma()*pres/den)
+        # print(self.Gamma(), pres, den, self.Gamma()*pres/den)
         sound = np.sqrt(self.Gamma()*pres / den)
         vel = np.sqrt(u[1]*u[1]/den/den)
-        print("vel = ", vel, " sound = ", sound)
+        # print("vel = ", vel, " sound = ", sound)
         return vel + sound
     
     def IsStatePhysical(self,u: np.array)-> bool:

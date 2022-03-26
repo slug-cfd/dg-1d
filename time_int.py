@@ -27,7 +27,8 @@ class time_integration:
 
         unew = uold + (k1 + 2.0*k2 + 2.0*k3 + k4)/6.0
         if (self.__linedg.params.LimitSolution() == True):
-            self.__limit.LimitSolution(unew)
+            for ieq in range(self.__linedg.params.neqs()):
+                self.__limit.LimitSolution(unew[:,:,ieq], ieq)
 
         return unew
  

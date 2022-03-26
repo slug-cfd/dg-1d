@@ -53,7 +53,7 @@ class linedg:
             # Compute flux at quadrature points 
             F = np.zeros(U.shape)
             for iq in range(self.__nquads):
-                print(U[iel,iq,:])
+                # print(U[iel,iq,:])
                 F[iel,iq,:] = self.Flux(U[iel,iq,:])
 
 

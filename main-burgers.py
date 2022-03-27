@@ -84,8 +84,16 @@ if __name__ == "__main__":
         nsteps += 1
         if (nsteps % 5 == 0 and params.PlotSol()==True): 
             print("time = %1.4f" %t, "dt = %1.3e"%dt)
-            PlotSolution(t, mesh.X(), u, fig)
+            uprim = np.zeros(u.shape)
+            for iel in range(params.nels()):
+                for i in range(params.nnodes()):
+                    uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
+            PlotSolution(t, mesh.X(), uprim, fig)
 
     if (params.PlotSol() == True):  
-        PlotSolution(t, mesh.X(), u, fig)
+        uprim = np.zeros(u.shape)
+        for iel in range(params.nels()):
+            for i in range(params.nnodes()):
+                uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
+        PlotSolution(t, mesh.X(), uprim, fig)
         plt.show()

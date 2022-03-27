@@ -201,12 +201,12 @@ class EulerProblem:
     def SetProblem(self):
         if (self.__problem == 1):
             neqs = 3
-            order = 1
+            order = 5
             nquads = 2*order
-            nels = 100
+            nels = 150 
             domain = np.array([0,1])
             maxtime = 0.2
-            cfl = 0.2
+            cfl = 0.5
             shockLoc = 0.5
             gamma = 1.4
             equation = "euler"

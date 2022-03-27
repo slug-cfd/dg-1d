@@ -19,7 +19,7 @@ class Euler:
     def Cons2Prim(self, consU):
         primU = np.zeros(consU.shape)
         primU[0] = consU[0] # Density
-        primU[1] = consU[1]/consU[0] # vx = rho*u / rho
+        primU[1] = np.divide( consU[1], consU[0] )# vx = rho*u / rho
         primU[2] = self.Pressure(consU)
         return primU
 

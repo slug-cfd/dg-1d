@@ -19,15 +19,15 @@ class Euler:
     def Cons2Prim(self, consU):
         primU = np.zeros(consU.shape)
         primU[0] = consU[0] # Density
-        primU[1] = np.divide( consU[1], consU[0] )# vx = rho*u / rho
+        primU[1] = consU[1]/consU[0] # np.divide( consU[1], consU[0] )# vx = rho*u / rho
         primU[2] = self.Pressure(consU)
         return primU
 
     def Prim2Cons(self, primU):
         consU = np.zeros(primU.shape)
         consU[0] = primU[0]
-        consU[1] = np.multiply(primU[0],primU[2])
-        consU[2] = primU[1]/(self.Gamma()-1) + 0.5*np.multiply(primU[0], np.multiply(primU[2],primU[2]))
+        consU[1] = np.multiply(primU[0],primU[1])
+        consU[2] = primU[2]/(self.Gamma()-1) + 0.5*np.multiply(primU[0], np.multiply(primU[2],primU[2]))
         return consU
 
     def Flux(self,u: np.array) -> np.array:

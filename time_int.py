@@ -34,4 +34,5 @@ class time_integration:
  
     def ComputeDt(self,u):
         umax = np.amax(u)
-        return self.__CourantNumber*self.__linedg.mesh.dx()/umax/(self.__linedg.order()**2)
+        print("umax = ", umax, " order = ", self.__linedg.order()+1.0)
+        return self.__CourantNumber*self.__linedg.mesh.dx()/umax/((self.__linedg.order()+1.0)**2)

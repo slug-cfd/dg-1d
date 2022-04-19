@@ -201,18 +201,18 @@ class EulerProblem:
     def SetProblem(self):
         if (self.__problem == 1):
             neqs = 3
-            order = 5
-            nquads = 2*order
-            nels = 150 
+            order = 1
+            nquads = 2*order 
+            nels = 250 
             domain = np.array([0,1])
             maxtime = 0.2
             cfl = 0.5
             shockLoc = 0.5
             gamma = 1.4
             equation = "euler"
-            # prim array rho, pressure, u
-            leftBC = np.array([1.0, 1.0, 0.0])
-            rightBC  = np.array([0.125, 0.1, 0.0])
+            # prim array rho,  u, pressure.
+            leftBC = np.array([1.0, 0.0, 1.0])
+            rightBC  = np.array([0.125, 0.0, 0.1])
 
             plotSol=True
 

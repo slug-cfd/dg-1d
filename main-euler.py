@@ -49,7 +49,7 @@ if __name__ == "__main__":
     for iel in range(params.nels()):
         for i in range(params.nnodes()):
             u[iel,i,:] = equations.Prim2Cons(U[iel,i,:])
-    fig = plt.figure()
+    # fig = plt.figure()
     # PlotSolution(0.0,mesh.X(), u[:,:,0], fig)
     print("=================================================================")
     print("*                    Simulation                                 *")

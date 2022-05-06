@@ -21,9 +21,24 @@ class time_integration:
         k4 = np.zeros(uold.shape)
         
         k1 = dt*self.__linedg.AssembleElement(uold)
+        if (self.__linedg.params.LimitSolution() == True):
+            for ieq in range(self.__linedg.params.neqs()):
+                self.__limit.LimitSolution(k1[:,:,ieq], ieq)
+
         k2 = dt*self.__linedg.AssembleElement(uold + 0.5*k1)
+        if (self.__linedg.params.LimitSolution() == True):
+            for ieq in range(self.__linedg.params.neqs()):
+                self.__limit.LimitSolution(k2[:,:,ieq], ieq)
+
         k3 = dt*self.__linedg.AssembleElement(uold + 0.5*k2)
+        if (self.__linedg.params.LimitSolution() == True):
+            for ieq in range(self.__linedg.params.neqs()):
+                self.__limit.LimitSolution(k3[:,:,ieq], ieq)
+
         k4 = dt*self.__linedg.AssembleElement(uold + k3)
+        if (self.__linedg.params.LimitSolution() == True):
+            for ieq in range(self.__linedg.params.neqs()):
+                self.__limit.LimitSolution(k4[:,:,ieq], ieq)
 
         unew = uold + (k1 + 2.0*k2 + 2.0*k3 + k4)/6.0
         if (self.__linedg.params.LimitSolution() == True):

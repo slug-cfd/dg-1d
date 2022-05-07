@@ -24,6 +24,26 @@ def lglnodes(N):
     w = 2.0/(N*N1*P[:,N]**2)
     return (0.5*(x[::-1]+1),0.5*w[::-1])
 
+# form vandermonde matrix using legendre polynomials
+def vandermonde(N: int, x: np.array) -> np.array:
+    N1 = N+1
+    V = np.zeros((N1,N1))
+
+
+    for i in range(len(x)):
+        print(x[i])
+        V[i,0] = 1
+        V[i,1] = x[i]
+
+        for k in range(2,N+1):
+            V[i,k] = ((2*k-1)*x[i]*V[i,k-1] - (k-1)*V[i,k-2])/float(k)
+    
+    for i in range(len(x)):
+        for k in range(N+1):
+            V[i,k] = V[i,k]/np.sqrt(2/(2*k + 1))
+
+    return V
+
 # Forms Lagrange interpolating polynomial defined at nodes x1, evaluates the
 # polynomial (matrix G) and its derivative (matrix D) at points x2
 def lagint(x1, x2):
@@ -62,3 +82,16 @@ def lagint(x1, x2):
 
     GD = G.dot(D)
     return G, GD
+
+
+
+if __name__ == "__main__":
+    N = 6
+    lgl = lglnodes(N)
+
+    V = vandermonde(N,lgl[0])
+    print(V)
+
+    M = np.matmul(V, V.T) 
+    print(M)
+

@@ -201,7 +201,7 @@ class EulerProblem:
     def SetProblem(self):
         if (self.__problem == 1):
             neqs = 3
-            order = 1
+            order = 4
             nquads = 2*order 
             nels = 250 
             domain = np.array([0,1])

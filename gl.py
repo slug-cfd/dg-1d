@@ -1,4 +1,5 @@
 import numpy as np
+import plotly.express as px
 
 # return the Legendre-Gauss-Lobatto nodes
 # N should be the order of polynomial
@@ -86,12 +87,26 @@ def lagint(x1, x2):
 
 
 if __name__ == "__main__":
-    N = 6
+
+    N = 2
     lgl = lglnodes(N)
+    G,D = lagint(lgl[0], lgl[0])
 
     V = vandermonde(N,lgl[0])
-    print(V)
+    vinv = np.linalg.inv(V)
 
-    M = np.matmul(V, V.T) 
-    print(M)
+    x = np.linspace(0,1,num=N+1)
 
+    f = x*x
+    fq = G@f
+
+    fm = vinv@fq
+    fm[N] = 0
+    fqt = V@fm
+    print(fqt)    
+
+    fig = px.scatter(x=x,y=fq, labels={'x':'x', 'y':'f_q(x0)'} )
+    fig.show()
+
+    fig = px.scatter(x=x,y=V@fqt, labels={'x':'x', 'y':'f_qt(x)'})
+    fig.show()

@@ -75,14 +75,17 @@ if __name__ == "__main__":
     fig = plt.figure()
     while t < params.MaxTime():
         dt = ti.ComputeDt(u)
-        print("step =", nsteps, "time = %1.4f" %t, "dt = %1.3e"%dt)
         if (dt > params.MaxTime()-t):
             dt = params.MaxTime()-t
+
+        # print("step =", nsteps, "time = %1.4f" %t, "dt = %1.3e"%dt)
+
         t += dt
         u = ti.Evolve(dt,t,u)
         nsteps += 1
         if (nsteps % 100 == 0 and params.PlotSol()==True): 
             print("time = %1.4f" %t, "dt = %1.3e"%dt)
+            ti.PrintLimitedCells()
             uprim = np.zeros(u.shape)
             for iel in range(params.nels()):
                 for i in range(params.nnodes()):

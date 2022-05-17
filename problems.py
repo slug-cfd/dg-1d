@@ -201,9 +201,9 @@ class EulerProblem:
     def SetProblem(self):
         if (self.__problem == 1):
             neqs = 3
-            order = 4
-            nquads = 2*order 
-            nels = 250 
+            order = 7
+            nquads = 2*order+1 
+            nels = 32 
             domain = np.array([0,1])
             maxtime = 0.2
             cfl = 0.5
@@ -216,7 +216,7 @@ class EulerProblem:
 
             plotSol=True
 
-            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "rk4", "outflow", "llf", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "ssprk3", "outflow", "llf", True, "mood", leftBC, rightBC, shockLoc, plotSol)
             mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
             u = Sod(params, mesh.X())
         return params, mesh, u

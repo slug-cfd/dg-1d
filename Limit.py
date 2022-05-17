@@ -42,28 +42,32 @@ class Limit:
         return ids
 
     def LimitSolution(self, u: np.array, ieq: int):
-        self.ulimit = u
-        self.u = np.zeros([self.__nels+2, self.__nnodes])
-        # print(u.shape)
-        self.u[1:self.__nels+1,:] = u
 
-        if (self.__params.BoundaryConditions() == "periodic"):
-            self.u[0,:] = u[-1,:]
-            self.u[-1,:] = u[0,:]
+        if (self.__linedg.params.Limiter() == "mood"):
+            print("Im going to limite using MOOD")        
         else:
-            self.u[0,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.LeftBC())[ieq]
-            self.u[-1,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.RightBC())[ieq]
-        
-        ids = self.FindElementsToLimit()
-        ids[0] = 1
-        self.__el_lim_ids = np.nonzero(ids > 0)
-        if (self.__el_lim_ids[0].size != 0):
-            if (self.__linedg.params.Limiter() == "pi1"):
-                # print("PI1 Limiting")
-                self.PI1()
-            elif(self.__linedg.params.Limiter() == "muscl"):
-                # print("MUSCL Limiting")
-                self.MUSCL()
+            self.ulimit = u
+            self.u = np.zeros([self.__nels+2, self.__nnodes])
+            # print(u.shape)
+            self.u[1:self.__nels+1,:] = u
+
+            if (self.__params.BoundaryConditions() == "periodic"):
+                self.u[0,:] = u[-1,:]
+                self.u[-1,:] = u[0,:]
+            else:
+                self.u[0,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.LeftBC())[ieq]
+                self.u[-1,:] = np.ones([self.__nnodes])*self.__linedg.equations.Prim2Cons(self.__params.RightBC())[ieq]
+            
+            self.ids = self.FindElementsToLimit()
+            # self.ids[0] = 1
+            self.el_lim_ids = np.nonzero(self.ids > 0)
+            if (self.el_lim_ids[0].size != 0):
+                if (self.__linedg.params.Limiter() == "pi1"):
+                    # print("PI1 Limiting")
+                    self.PI1()
+                elif(self.__linedg.params.Limiter() == "muscl"):
+                    # print("MUSCL Limiting")
+                    self.MUSCL()
 
     
     #PI1 presented by Osher in "Convergence of generalized muscl schemes" 1985
@@ -73,9 +77,9 @@ class Limit:
         for i in range(self.__nels+2):
             self.dubar[i] = np.sum( np.matmul( self.ip.W(), np.matmul(self.ip.D(), self.u[i,:])))/self.__dx
         
-        for i in range(self.__el_lim_ids[0].shape[0]):
+        for i in range(self.el_lim_ids[0].shape[0]):
             # define element under consideration
-            el = self.__el_lim_ids[0][i]
+            el = self.el_lim_ids[0][i]
             elpGC = el+1 # element id plus the ghost cell
             xc = (self.__X[el,0] + 0.5*self.__dx) # element center
             
@@ -89,9 +93,9 @@ class Limit:
         for i in range(self.__nels+2):
             self.dubar[i] = np.sum( np.matmul( self.ip.W(), np.matmul(self.ip.D(), self.u[i,:])))/self.__dx
         
-        for i in range(self.__el_lim_ids[0].shape[0]):
+        for i in range(self.el_lim_ids[0].shape[0]):
             # define element under consideration
-            el = self.__el_lim_ids[0][i]
+            el = self.el_lim_ids[0][i]
             elpGC = el+1 # element id plus the ghost cell
             xc = (self.__X[el,0] + 0.5*self.__dx) # element center
             

@@ -9,3 +9,6 @@ In order to set up a new set of equations then please look at `euler.py` to see 
 Only depends on Numpy. 
 
 If you have any questions, please feel to email me at mrodrig6 at ucsc dot edu.
+
+# Adding Features
+If you would like to add a new feature, please create a new branch. Do not update the `main` branch. The `main` branch should always be stable.

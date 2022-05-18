@@ -216,6 +216,26 @@ class EulerProblem:
 
             plotSol=True
 
+            params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "ssprk3", "outflow", "llf", True, "pi1", leftBC, rightBC, shockLoc, plotSol)
+            mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
+            u = Sod(params, mesh.X())
+        if (self.__problem == 2):
+            neqs = 3
+            order = 2
+            nquads = 2*order+1 
+            nels = 100 
+            domain = np.array([0,1])
+            maxtime = 0.2
+            cfl = 0.5
+            shockLoc = 0.5
+            gamma = 1.4
+            equation = "euler"
+            # prim array rho,  u, pressure.
+            leftBC = np.array([1.0, 0.0, 1.0])
+            rightBC  = np.array([0.125, 0.0, 0.1])
+
+            plotSol=True
+
             params = simp.Parameters(neqs, order, nquads, nels, domain, cfl, maxtime, "ssprk3", "outflow", "llf", True, "mood", leftBC, rightBC, shockLoc, plotSol)
             mesh = m.Mesh(params.domain(), params.nels(), params.nnodes(), params.nquads())
             u = Sod(params, mesh.X())

@@ -32,7 +32,6 @@ def vandermonde(N: int, x: np.array) -> np.array:
 
 
     for i in range(len(x)):
-        print(x[i])
         V[i,0] = 1
         V[i,1] = x[i]
 

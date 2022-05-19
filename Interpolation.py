@@ -10,8 +10,8 @@ class Interpolation:
         self.__xquads = gl.lglnodes(self.__nQuads-1)
         self.__W      = np.diag(self.__xquads[1])
         self.__G, self.__D = gl.lagint(self.__xnodes[0],self.__xquads[0]) 
-        self.__V      = gl.vandermonde(self.nNodes-1, self.__xnodes)
-        self.__Vinv   = np.linalg.inv(V)
+        self.__V      = gl.vandermonde(self.__nNodes-1, self.__xnodes[0])
+        self.__Vinv   = np.linalg.inv(self.__V)
 
     # Returns location of nodes and quads
     def xnodes(self):

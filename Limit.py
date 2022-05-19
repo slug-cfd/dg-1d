@@ -1,6 +1,38 @@
 import numpy as np
 import Interpolation as Interpolation
 
+class LimitMOOD:
+    def __init__(self,linedg):
+        self.__linedg = linedg
+        self.__params = linedg.params
+        self.__nnodes = self.__params.nnodes()
+        self.__nquads = self.__params.nquads()
+        self.__nels   = self.__params.nels()
+        self.__neqs   = self.__params.neqs()
+        self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
+        self.ubar = np.zeros([self.__nels,self.__neqs])
+        self.umodal = np.zeros([self.__nels, self.__nnodes, self.__neqs])
+
+        pass
+
+    def ComputeElementAverage(self, iel: int):
+        for ieq in range(self.__neqs):
+            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(),self.u[iel,:,ieq]) ) )
+        pass
+    
+    def ComputeElementModalSolution(self,iel: int):
+        for ieq in range(self.__neqs):
+            self.umodal[iel,:,ieq] = self.ip.Vinv@self.ulimit[iel,:,ieq]
+        pass
+
+    def LimitSolution(self, u: np.array):
+        self.ulimit = u
+        # Compute Average
+        for i in range(self.__nels):
+           self.ComputeElementAverage(i)
+        
+        pass
+
 class Limit:
     def __init__(self, linedg):
         self.__linedg = linedg

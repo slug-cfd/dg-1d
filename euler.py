@@ -14,8 +14,6 @@ class Euler:
         # P = (self.Gamma()-1)*( u[2] - 0.5*np.divide( rhou_sqrd, u[0] ))
         return P
 
-    # TODO (mjrodriguez): implement transformation from conservative to primitive variables
-    # TODO(mjrodriguez): Definitely a bug here...
     def Cons2Prim(self, consU):
         primU = np.zeros(consU.shape)
         primU[0] = consU[0] # Density

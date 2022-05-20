@@ -15,22 +15,64 @@ class LimitMOOD:
 
         pass
 
+    def LimitSolution(self, u: np.array):
+        self.ulimit = u
+        # Compute Average
+        for i in range(self.__nels):
+            self.ComputeElementAverage(i)
+            self.pbar = self.__linedg.equations.Pressure(self.ubar[i,:])
+            dens = self.ubar[i,0]
+
+            # current highest mode index
+            chm = self.__nnodes-1
+            unstable = True
+           
+            while unstable:
+
+                # Checking PAD and CAD conditions
+                if self.pbar < 0 or dens < 0:
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+                if np.isnan(self.pbar) or np.isnan(dens):
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+                if np.isinf(self.pbar) or np.isinf(dens):
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+            
+
+            print("[dense, momx, ener] = ", self.ubar[i,:])
+            print("pressure = ", self.pbar)
+
+        
+        pass
+    
+    def TruncateModalSolution(self,iel: int, im: int):
+        self.ComputeElementModalSolution(iel)
+        self.umodal[iel,im,:] = 0.0
+        for ieq in range(self.__neqs):
+            self.ulimit[iel,:,ieq] = self.ip.V@self.umodal[iel,:,ieq]
+        self.ComputeElementAverage(iel)
+        self.pbar = self.__linedg.equations.Pressure(self.ubar[iel,:]) 
+
+        return im-1
+
+
+
     def ComputeElementAverage(self, iel: int):
         for ieq in range(self.__neqs):
-            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(),self.u[iel,:,ieq]) ) )
+            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(),self.ulimit[iel,:,ieq]) ) )
         pass
     
     def ComputeElementModalSolution(self,iel: int):
         for ieq in range(self.__neqs):
             self.umodal[iel,:,ieq] = self.ip.Vinv@self.ulimit[iel,:,ieq]
-        pass
-
-    def LimitSolution(self, u: np.array):
-        self.ulimit = u
-        # Compute Average
-        for i in range(self.__nels):
-           self.ComputeElementAverage(i)
-        
         pass
 
 class Limit:

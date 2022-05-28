@@ -25,7 +25,7 @@ class Euler:
         consU = np.zeros(primU.shape)
         consU[0] = primU[0]
         consU[1] = np.multiply(primU[0],primU[1])
-        consU[2] = primU[2]/(self.Gamma()-1) + 0.5*np.multiply(primU[0], np.multiply(primU[2],primU[2]))
+        consU[2] = primU[2]/(self.Gamma()-1) + 0.5*np.multiply(primU[0], np.multiply(primU[1],primU[1]))
         return consU
 
     def Flux(self,u: np.array) -> np.array:

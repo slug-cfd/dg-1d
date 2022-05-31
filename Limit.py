@@ -10,45 +10,56 @@ class LimitMOOD:
         self.__nels   = self.__params.nels()
         self.__neqs   = self.__params.neqs()
         self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
-        self.ubar = np.zeros([self.__nels,self.__neqs])
+        self.ubar = np.zeros([self.__nels+2,self.__neqs])
+        self.pbar = np.zeros([self.__nels+2])
         self.umodal = np.zeros([self.__nels, self.__nnodes, self.__neqs])
 
         pass
 
     def LimitSolution(self, u: np.array):
         self.ulimit = u
+        self.ughost = np.zeros([self.__nels+2,self.__nnodes, self.__neqs])
+        self.ughost[1:self.__nels+1,:,:] = u
+
+        leftBC = self.__linedg.equations.Prim2Cons(self.__params.LeftBC()) 
+        rightBC = self.__linedg.equations.Prim2Cons(self.__params.RightBC()) 
+        for i in range(self.__nnodes):
+            self.ughost[0,i,:] = leftBC
+            self.ughost[-1,i,:] = rightBC
+
         # Compute Average
-        for i in range(self.__nels):
-            self.ComputeElementAverage(i)
-            self.pbar = self.__linedg.equations.Pressure(self.ubar[i,:])
-            dens = self.ubar[i,0]
+        for i in range(self.__nels+2):
+            self.ComputeElementAverage(i,self.ughost)
+            self.pbar[i] = self.__linedg.equations.Pressure(self.ubar[i,:])
 
-            # current highest mode index
-            chm = self.__nnodes-1
-            unstable = True
+        # for i in range(self.__nels):
+
+        #     dens = self.ubar[i,0]
+
+        #     # current highest mode index
+        #     chm = self.__nnodes-1
+        #     unstable = True
            
-            while unstable:
+        #     while unstable:
 
-                # Checking PAD and CAD conditions
-                if self.pbar < 0 or dens < 0:
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
-                if np.isnan(self.pbar) or np.isnan(dens):
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
-                if np.isinf(self.pbar) or np.isinf(dens):
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
+        #         # Checking PAD and CAD conditions
+        #         if self.pbar[i] < 0 or dens < 0:
+        #             if chm > 0:
+        #                 chm = self.TruncateModalSolution(i, chm)
+        #             else:
+        #                 break
+        #         if np.isnan(self.pbar[i]) or np.isnan(dens):
+        #             if chm > 0:
+        #                 chm = self.TruncateModalSolution(i, chm)
+        #             else:
+        #                 break
+        #         if np.isinf(self.pbar[i]) or np.isinf(dens):
+        #             if chm > 0:
+        #                 chm = self.TruncateModalSolution(i, chm)
+        #             else:
+        #                 break
             
-
-            print("[dense, momx, ener] = ", self.ubar[i,:])
-            print("pressure = ", self.pbar)
+        #         unstable = False
 
         
         pass
@@ -58,16 +69,16 @@ class LimitMOOD:
         self.umodal[iel,im,:] = 0.0
         for ieq in range(self.__neqs):
             self.ulimit[iel,:,ieq] = self.ip.V@self.umodal[iel,:,ieq]
-        self.ComputeElementAverage(iel)
+        self.ComputeElementAverage(iel, self.ulimit)
         self.pbar = self.__linedg.equations.Pressure(self.ubar[iel,:]) 
 
         return im-1
 
 
 
-    def ComputeElementAverage(self, iel: int):
+    def ComputeElementAverage(self, iel: int, u: np.array):
         for ieq in range(self.__neqs):
-            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(),self.ulimit[iel,:,ieq]) ) )
+            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(), u[iel,:,ieq]) ) )
         pass
     
     def ComputeElementModalSolution(self,iel: int):

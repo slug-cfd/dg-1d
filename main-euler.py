@@ -61,11 +61,8 @@ if __name__ == "__main__":
     print("=================================================================")
 
     # params.UpdatePlotSol(False)
-    utest = np.ones([params.nels(), params.nnodes()])
-
-
-    print(u[0,:,:])
-
+    # utest = np.ones([params.nels(), params.nnodes(), params.neqs()])
+    
     ldg = linedg.linedg(mesh, params, equations)
     ti = tint.time_integration(ldg)
     lim = Limit.LimitMOOD(ldg)

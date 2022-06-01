@@ -9,14 +9,22 @@ class LimitMOOD:
         self.__nquads = self.__params.nquads()
         self.__nels   = self.__params.nels()
         self.__neqs   = self.__params.neqs()
+        self.__dx     = linedg.mesh.dx()
         self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
         self.ubar = np.zeros([self.__nels+2,self.__neqs])
         self.pbar = np.zeros([self.__nels+2])
         self.umodal = np.zeros([self.__nels, self.__nnodes, self.__neqs])
+        
+        # local flow compressibility parameter
+        self.sigma_v = 5.0
+
+        # pressure gradient check
+        self.sigma_p = 5.0
 
         pass
 
     def LimitSolution(self, u: np.array):
+        self.ulimit = np.zeros([self.__nels, self.__nnodes, self.__neqs]) 
         self.ulimit = u
         self.ughost = np.zeros([self.__nels+2,self.__nnodes, self.__neqs])
         self.ughost[1:self.__nels+1,:,:] = u
@@ -32,38 +40,62 @@ class LimitMOOD:
             self.ComputeElementAverage(i,self.ughost)
             self.pbar[i] = self.__linedg.equations.Pressure(self.ubar[i,:])
 
-        # for i in range(self.__nels):
+        for i in range(1,self.__nels+1):
 
-        #     dens = self.ubar[i,0]
+            dens = self.ubar[i,0]
 
-        #     # current highest mode index
-        #     chm = self.__nnodes-1
-        #     unstable = True
+            # current highest mode index
+            chm = self.__nnodes-1
+            unstable = True
            
-        #     while unstable:
+            while unstable and chm > 0:
 
-        #         # Checking PAD and CAD conditions
-        #         if self.pbar[i] < 0 or dens < 0:
-        #             if chm > 0:
-        #                 chm = self.TruncateModalSolution(i, chm)
-        #             else:
-        #                 break
-        #         if np.isnan(self.pbar[i]) or np.isnan(dens):
-        #             if chm > 0:
-        #                 chm = self.TruncateModalSolution(i, chm)
-        #             else:
-        #                 break
-        #         if np.isinf(self.pbar[i]) or np.isinf(dens):
-        #             if chm > 0:
-        #                 chm = self.TruncateModalSolution(i, chm)
-        #             else:
-        #                 break
-            
-        #         unstable = False
+                # Checking PAD and CAD conditions
+                if np.isnan(self.pbar[i]) or np.isnan(dens):
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+                if np.isinf(self.pbar[i]) or np.isinf(dens):
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+                if self.pbar[i] < 0 or dens < 0:
+                    if chm > 0:
+                        chm = self.TruncateModalSolution(i, chm)
+                    else:
+                        break
+
+                # Compressibility and strogn shocks check
+                if self.StrongCompressibilityCheck(i) or self.StrongPressureCheck(i):
+                    print("Strong compressible pressure grad present, iel = ", i)
+                unstable = False
 
         
-        pass
+        return self.ulimit 
     
+    def StrongCompressibilityCheck(self, iel: int) -> bool:
+        uprim_r = self.__linedg.equations.Cons2Prim(self.ubar[iel+1,:])
+        uprim_l = self.__linedg.equations.Cons2Prim(self.ubar[iel-1,:])
+        div_v = (uprim_r[1] - uprim_l[1])/(2*self.__dx)
+        if div_v < -self.sigma_v:
+            print(div_v)
+            return True
+
+        return False
+
+    def StrongPressureCheck(self, iel: int) -> bool:
+        pmin = np.min(np.array([ self.pbar[iel+1], self.pbar[iel-1] ]))
+        gradp = np.abs(self.pbar[iel+1] - self.pbar[iel-1]) / (2*self.__dx*pmin)
+
+
+        if gradp > self.sigma_p:
+            print(gradp)
+            return True
+
+        return False
+
     def TruncateModalSolution(self,iel: int, im: int):
         self.ComputeElementModalSolution(iel)
         self.umodal[iel,im,:] = 0.0

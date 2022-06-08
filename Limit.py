@@ -23,7 +23,7 @@ class LimitMOOD:
 
         pass
 
-    def LimitSolution(self, u: np.array):
+    def LimitSolution(self, u: np.array) -> np.array:
         self.ulimit = u
         self.ughost = np.zeros([self.__nels+2,self.__nnodes, self.__neqs])
         self.ughost[1:self.__nels+1,:,:] = u
@@ -39,7 +39,22 @@ class LimitMOOD:
             self.ubar[i,:] = self.ComputeElementAverage(i,self.ughost)
             self.pbar[i] = self.__linedg.equations.Pressure(self.ubar[i,:])
 
-        self.Truncate = self.FindElementsToLimit() 
+        mood_finish = False
+        mode = np.full([self.__nels+2], self.__nnodes-1, dtype=int) 
+        while not mood_finish:
+            self.Truncate = self.FindElementsToLimit() 
+            el_trunc_list = np.nonzero(self.Truncate > 0)
+            print(el_trunc_list[0].size)
+            if el_trunc_list[0].size == 0:
+                mood_finish = True
+            # TODO (mjrodriguez): Moved this loop within an else loop and iterate through only the truncation list 
+            for iel in range(1,self.__nels+1):
+                if self.Truncate[iel] and mode[iel] > 0:
+                    mode[iel] = self.TruncateModalSolution(iel, mode[iel])
+            
+        
+        print("Truncate List")
+        print(self.Truncate)
 
 
         return self.ulimit 
@@ -98,7 +113,6 @@ class LimitMOOD:
     def StrongPressureCheck(self, iel: int) -> bool:
         pmin = np.min(np.array([ self.pbar[iel+1], self.pbar[iel-1] ]))
         gradp = np.abs(self.pbar[iel+1] - self.pbar[iel-1]) / (2*self.__dx*pmin)
-
 
         if gradp > self.sigma_p:
             return True

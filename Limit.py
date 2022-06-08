@@ -11,9 +11,9 @@ class LimitMOOD:
         self.__neqs   = self.__params.neqs()
         self.__dx     = linedg.mesh.dx()
         self.ip = Interpolation.Interpolation(self.__nnodes, self.__nquads)
-        self.ubar = np.zeros([self.__nels+2,self.__neqs])
-        self.pbar = np.zeros([self.__nels+2])
-        self.umodal = np.zeros([self.__nels, self.__nnodes, self.__neqs])
+        self.ubar    = np.zeros([self.__nels+2,self.__neqs])
+        self.pbar    = np.zeros([self.__nels+2])
+        self.umodal  = np.zeros([self.__nels, self.__nnodes, self.__neqs])
         
         # local flow compressibility parameter
         self.sigma_v = 5.0
@@ -24,7 +24,6 @@ class LimitMOOD:
         pass
 
     def LimitSolution(self, u: np.array):
-        self.ulimit = np.zeros([self.__nels, self.__nnodes, self.__neqs]) 
         self.ulimit = u
         self.ughost = np.zeros([self.__nels+2,self.__nnodes, self.__neqs])
         self.ughost[1:self.__nels+1,:,:] = u
@@ -37,50 +36,61 @@ class LimitMOOD:
 
         # Compute Average
         for i in range(self.__nels+2):
-            self.ComputeElementAverage(i,self.ughost)
+            self.ubar[i,:] = self.ComputeElementAverage(i,self.ughost)
             self.pbar[i] = self.__linedg.equations.Pressure(self.ubar[i,:])
 
+        self.Truncate = self.FindElementsToLimit() 
+
+
+        return self.ulimit 
+
+    def FindElementsToLimit(self) -> np.array:
+        truncate = np.full((self.__nels+2), False, dtype=bool)
         for i in range(1,self.__nels+1):
 
+            dmp_check = True
             dens = self.ubar[i,0]
+            # Checking PAD and CAD conditions
+            if np.isnan(self.pbar[i]) or np.isnan(dens):
+                truncate[i] = True
+                dmp_check = False
+            if np.isinf(self.pbar[i]) or np.isinf(dens):
+                truncate[i] = True
+                dmp_check = False
+            if self.pbar[i] < 0 or dens < 0:
+                truncate[i] = True
+                dmp_check = False
 
-            # current highest mode index
-            chm = self.__nnodes-1
-            unstable = True
-           
-            while unstable and chm > 0:
-
-                # Checking PAD and CAD conditions
-                if np.isnan(self.pbar[i]) or np.isnan(dens):
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
-                if np.isinf(self.pbar[i]) or np.isinf(dens):
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
-                if self.pbar[i] < 0 or dens < 0:
-                    if chm > 0:
-                        chm = self.TruncateModalSolution(i, chm)
-                    else:
-                        break
-
+            if dmp_check:
                 # Compressibility and strogn shocks check
                 if self.StrongCompressibilityCheck(i) or self.StrongPressureCheck(i):
-                    print("Strong compressible pressure grad present, iel = ", i)
-                unstable = False
+                    # print("Strong compressible pressure grad present, iel = ", i)
 
-        
-        return self.ulimit 
-    
+                    minrho, maxrho = self.LocalMinMaxRho(i)
+
+                    # new extrema in plateau check
+                    if maxrho - minrho >= self.__dx**3:
+                        # print("New extrema in plateau")
+                        # DMP
+                        if  self.ubar[i,0] < minrho or self.ubar[i,0] > maxrho:
+                            # print("outside DMP")
+                            truncate[i] = True
+                            # Check if smooth extrema
+                            Cmin, Cmax = self.ComputeU2MinMax(i)
+                            delta = self.__dx
+                            if Cmin*Cmax > -delta and ( np.max( np.array([Cmin,Cmax]) ) < delta or  np.abs(Cmin/Cmax) >= 0.5 ):
+                                # If in smooth extrema then solution in element regains admissibility
+                                truncate[i] = False
+                                # print("iel = ", i, " Recovers Admissibility")
+
+        return truncate
+
+
     def StrongCompressibilityCheck(self, iel: int) -> bool:
         uprim_r = self.__linedg.equations.Cons2Prim(self.ubar[iel+1,:])
         uprim_l = self.__linedg.equations.Cons2Prim(self.ubar[iel-1,:])
         div_v = (uprim_r[1] - uprim_l[1])/(2*self.__dx)
         if div_v < -self.sigma_v:
-            print(div_v)
             return True
 
         return False
@@ -91,28 +101,50 @@ class LimitMOOD:
 
 
         if gradp > self.sigma_p:
-            print(gradp)
             return True
 
         return False
 
-    def TruncateModalSolution(self,iel: int, im: int):
+    # Compute the min and max density of the neighborhood iel-1, iel, iel+1 where iel is the element under consideration
+    def LocalMinMaxRho(self, iel: int) -> tuple:
+        maxrho = np.max(np.array([ self.ubar[iel-1,0], self.ubar[iel, 0], self.ubar[iel+1,0]  ]))
+        minrho = np.min(np.array([ self.ubar[iel-1,0], self.ubar[iel, 0], self.ubar[iel+1,0]  ]))
+
+        return minrho, maxrho
+
+    def ComputeU2MinMax(self, iel: int) -> tuple:
+        D2 = np.zeros(3)
+        # Currently we are only considereing element iel but we need to compute second order derivatives at adjacent elements, i.e. iel-1, iel, and iel+1.
+        # So we iterate through -1, 0, 1 to shift the element index. It's sliding window-like. 
+        # ielx is then the cetner element and we can compute centered finite difference second order derivatives for those elements.
+        for ix in range(-1,2):
+            ielx = iel-ix
+            D2[ix+1] = ( self.ubar[ielx-1] - 2*self.ubar[ielx] + self.ubar[ielx+1] ) / self.__dx**2
+        
+        Cmin = np.min(D2)
+        Cmax = np.max(D2)
+
+        return Cmin, Cmax
+
+
+    def TruncateModalSolution(self,iel: int, im: int) -> int:
         self.ComputeElementModalSolution(iel)
         self.umodal[iel,im,:] = 0.0
         for ieq in range(self.__neqs):
             self.ulimit[iel,:,ieq] = self.ip.V@self.umodal[iel,:,ieq]
-        self.ComputeElementAverage(iel, self.ulimit)
+        self.ubar[iel,:] = self.ComputeElementAverage(iel, self.ulimit)
         self.pbar = self.__linedg.equations.Pressure(self.ubar[iel,:]) 
 
         return im-1
 
 
 
-    def ComputeElementAverage(self, iel: int, u: np.array):
+    def ComputeElementAverage(self, iel: int, u: np.array) -> np.array:
+        ubar = np.zeros([self.__neqs])
         for ieq in range(self.__neqs):
-            self.ubar[iel,ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(), u[iel,:,ieq]) ) )
-        pass
-    
+            ubar[ieq] = np.sum( np.matmul( self.ip.W(),np.matmul(self.ip.B(), u[iel,:,ieq]) ) )
+        return ubar 
+
     def ComputeElementModalSolution(self,iel: int):
         for ieq in range(self.__neqs):
             self.umodal[iel,:,ieq] = self.ip.Vinv@self.ulimit[iel,:,ieq]

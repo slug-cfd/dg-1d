@@ -4,7 +4,7 @@ import Interpolation as Interpolation
 import SimulationParameters as sp
 import problems as pr
 import Mesh as m
-import time_int as tint
+from TimeIntegration import TimeIntegration
 import linedg
 import Limit
 # from scipyimport sparse
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
 
     ldg = linedg.linedg(mesh, params, equations)
-    ti = tint.time_integration(ldg)
+    ti = TimeIntegration(ldg)
     # lim = Limit.Limit(ldg)
     # ubar = lim.LimitSolution(u)
 

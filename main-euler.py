@@ -4,10 +4,10 @@ import Interpolation as Interpolation
 import SimulationParameters as sp
 import problems as pr
 import Mesh as m
-import time_int as tint
 import euler as euler
 import linedg
 import Limit
+from TimeIntegration import TimeIntegration
 # from scipyimport sparse
 from mpl_toolkits.mplot3d import Axes3D
 import sys
@@ -15,7 +15,7 @@ np.set_printoptions(linewidth=250)
 
 
 
-def PlotSolution(t, x, u, fig):
+def PlotSolution(t: float, x: np.ndarray, u: np.ndarray, fig: plt.figure):
     xplot = x.ravel()
     fig.clf()
     colors = ['b-', 'r-', 'g-']
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
 
     ldg = linedg.linedg(mesh, params, equations)
-    ti = tint.time_integration(ldg)
+    ti = TimeIntegration(ldg)
     lim = Limit.Limit(ldg)
     # ubar = lim.LimitSolution(u)
 

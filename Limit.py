@@ -44,19 +44,15 @@ class LimitMOOD:
         while not mood_finish:
             self.Truncate = self.FindElementsToLimit() 
             el_trunc_list = np.nonzero(self.Truncate > 0)
-            print(el_trunc_list[0].size)
             if el_trunc_list[0].size == 0:
                 mood_finish = True
-            # TODO (mjrodriguez): Moved this loop within an else loop and iterate through only the truncation list 
-            for iel in range(1,self.__nels+1):
-                if self.Truncate[iel] and mode[iel] > 0:
-                    mode[iel] = self.TruncateModalSolution(iel, mode[iel])
+            else:
+                for i in range(el_trunc_list[0].shape[0]):
+                    iel = el_trunc_list[0][i]
+                    if mode[iel] > 0:
+                        mode[iel] = self.TruncateModalSolution(iel, mode[iel])
             
         
-        print("Truncate List")
-        print(self.Truncate)
-
-
         return self.ulimit 
 
     def FindElementsToLimit(self) -> np.array:
@@ -72,7 +68,7 @@ class LimitMOOD:
             if np.isinf(self.pbar[i]) or np.isinf(dens):
                 truncate[i] = True
                 dmp_check = False
-            if self.pbar[i] < 0 or dens < 0:
+            if self.pbar[i] <= 0 or dens <= 0:
                 truncate[i] = True
                 dmp_check = False
 
@@ -111,7 +107,9 @@ class LimitMOOD:
         return False
 
     def StrongPressureCheck(self, iel: int) -> bool:
+        pneighb = np.array([ self.pbar[iel+1], self.pbar[iel], self.pbar[iel-1] ])
         pmin = np.min(np.array([ self.pbar[iel+1], self.pbar[iel-1] ]))
+        print("iel = ", iel, " p = ", pneighb, " pmin = ", pmin)
         gradp = np.abs(self.pbar[iel+1] - self.pbar[iel-1]) / (2*self.__dx*pmin)
 
         if gradp > self.sigma_p:

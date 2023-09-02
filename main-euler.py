@@ -68,32 +68,32 @@ if __name__ == "__main__":
     lim = Limit.LimitMOOD(ldg)
     ubar = lim.LimitSolution(u)
 
-    # t = 0.0
-    # nsteps = 0
-    # fig = plt.figure()
-    # while t < params.MaxTime():
-    #     dt = ti.ComputeDt(u)
-    #     if (dt > params.MaxTime()-t):
-    #         dt = params.MaxTime()-t
+    t = 0.0
+    nsteps = 0
+    fig = plt.figure()
+    while t < params.MaxTime():
+        dt = ti.ComputeDt(u)
+        if (dt > params.MaxTime()-t):
+            dt = params.MaxTime()-t
 
-    #     # print("step =", nsteps, "time = %1.4f" %t, "dt = %1.3e"%dt)
+        print("step =", nsteps, "time = %1.4f" %t, "dt = %1.3e"%dt)
 
-    #     t += dt
-    #     u = ti.Evolve(dt,t,u)
-    #     nsteps += 1
-    #     if (nsteps % 100 == 0 and params.PlotSol()==True): 
-    #         print("time = %1.4f" %t, "dt = %1.3e"%dt)
-    #         ti.PrintLimitedCells()
-    #         uprim = np.zeros(u.shape)
-    #         for iel in range(params.nels()):
-    #             for i in range(params.nnodes()):
-    #                 uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
-    #         PlotSolution(t, mesh.X(), uprim, fig)
+        t += dt
+        u = ti.Evolve(dt,t,u)
+        nsteps += 1
+        if (nsteps % 1 == 0 and params.PlotSol()==True): 
+            # print("time = %1.4f" %t, "dt = %1.3e"%dt)
+            ti.PrintLimitedCells()
+            uprim = np.zeros(u.shape)
+            for iel in range(params.nels()):
+                for i in range(params.nnodes()):
+                    uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
+            PlotSolution(t, mesh.X(), uprim, fig)
 
-    # if (params.PlotSol() == True):  
-    #     uprim = np.zeros(u.shape)
-    #     for iel in range(params.nels()):
-    #         for i in range(params.nnodes()):
-    #             uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
-    #     PlotSolution(t, mesh.X(), uprim, fig)
-    #     plt.show()
+    if (params.PlotSol() == True):  
+        uprim = np.zeros(u.shape)
+        for iel in range(params.nels()):
+            for i in range(params.nnodes()):
+                uprim[iel,i,:] = equations.Cons2Prim(u[iel,i,:])
+        PlotSolution(t, mesh.X(), uprim, fig)
+        plt.show()

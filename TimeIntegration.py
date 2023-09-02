@@ -2,7 +2,7 @@ import numpy as np
 import linedg as linedg
 import Limit as Limit
 
-class time_integration:
+class TimeIntegration:
     def __init__(self, linedg):
         self.__linedg = linedg
         self.__CourantNumber = linedg.params.CourantNumber()
